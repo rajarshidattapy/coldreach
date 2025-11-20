@@ -1,0 +1,67 @@
+body {
+  width: 320px;
+  padding: 15px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.input-group {
+  margin-bottom: 12px;
+}
+
+label {
+  font-size: 13px;
+  color: #333;
+}
+
+input {
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+textarea {
+  width: 100%;
+  height: 140px;
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+button {
+  width: 48%;
+  padding: 10px;
+  border: none;
+  background-color: #0073b1;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+button:hover {
+  background-color: #005f8f;
+}
+
+#copy {
+  width: 100%;
+  margin-top: 12px;
+  background-color: #333;
+}
+
+#copy:hover {
+  background-color: #111;
+}

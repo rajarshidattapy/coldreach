@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LinkedIn DM Automator</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+  <h1>LinkedIn DM Automator</h1>
+
+  <div class="input-group">
+    <label>Name</label>
+    <input id="name" type="text" placeholder="John Doe" />
+  </div>
+
+  <div class="input-group">
+    <label>Company</label>
+    <input id="company" type="text" placeholder="Google" />
+  </div>
+
+  <div class="input-group">
+    <label>Specific Work</label>
+    <input id="work" type="text" placeholder="Your ML infra work" />
+  </div>
+
+  <div class="input-group">
+    <label>Resume Link</label>
+    <input id="resume" type="text" placeholder="https://..." />
+  </div>
+
+  <div class="btn-group">
+    <button id="connectedBtn">Connected DM</button>
+    <button id="notConnectedBtn">200-char Note</button>
+  </div>
+
+  <input id="resume" placeholder="Resume link" />
+
+<button id="generate">Generate Message</button>
+<textarea id="output"></textarea>
+<button id="copy">Copy</button>
+
+  <textarea id="output" placeholder="Generated message will appear here..."></textarea>
+
+  <button id="copy">Copy to Clipboard</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
