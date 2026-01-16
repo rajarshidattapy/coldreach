@@ -13,13 +13,22 @@ resume = st.text_input("Resume Drive Link")
 
 if st.button("Generate"):
     llm = get_llm()
-
+    results = []
     for url in urls.splitlines():
-        if not url.strip():
+        url = url.strip()
+        if not url:
             continue
+        try:
+            profile = extract_profile(url)
+            msg = generate_message(llm, profile, template, resume)
+            results.append((profile, msg))
+        except Exception as e:
+            results.append(({"name": url, "error": str(e)}, None))
 
-        profile = extract_profile(url)
-        msg = generate_message(llm, profile, template, resume)
-
-        st.subheader(profile["name"])
-        st.text_area("Message", msg, height=120)
+    for profile, msg in results:
+        name = profile.get("name", "Unknown")
+        with st.expander(name):
+            if msg:
+                st.text_area("Message", msg, height=120, key=name)
+            else:
+                st.error(f"Error: {profile.get('error', 'Unknown error')}")
