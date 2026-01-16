@@ -1,30 +1,56 @@
 from dotenv import load_dotenv
 import os
-
-from langchain_groq import ChatGroq
-from langchain_core.output_parsers import StrOutputParser
-
-from core.templates import (
-    NO_CONNECTION_TEMPLATE,
-    STARTUP_TEMPLATE,
-    BIGTECH_TEMPLATE,
-    RESEARCH_TEMPLATE
-)
-
-from dotenv import load_dotenv
-import os
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
-from core.prompt import (
-    RESEARCH_INTERN_DM,
-    STARTUP_INTERN_DM,
-    BIGTECH_REFERRAL_DM,
-    NO_CONNECTION_200
-)
 from core.utils import enforce_char_limit
 
 load_dotenv()
+
+# Clean message templates (without LLM instructions)
+NO_CONNECTION_TEMPLATE = """Hi {name}, {slot}. I'm a 3rd-year IT student exploring AI internships and would love to connect. Resume: {resume}"""
+
+RESEARCH_TEMPLATE = """Hello Professor {surname},
+
+I hope you're doing well. I'm a 3rd-year undergraduate in Information Science and Engineering, and I'm very interested in pursuing a 3–6 month research internship under your guidance on campus at {campus}.
+
+{slot}
+
+If you're open to it, I'd be grateful for a chance to discuss potential directions.
+
+Resume: {resume}
+
+Thank you for your time.
+Best regards,
+Rajarshi Datta"""
+
+STARTUP_TEMPLATE = """Hi {name},
+
+I'm Rajarshi, a 3rd-year IT student passionate about building real-world AI systems.
+
+{slot}
+
+I'd love to explore an AI internship opportunity where I can learn from your team and contribute meaningfully.
+
+Resume: {resume}
+
+Best regards,
+Rajarshi"""
+
+BIGTECH_TEMPLATE = """Hey {name},
+
+I'm Rajarshi, a pre-final year IT student from BIT.
+
+I came across {company}'s 2026 {position} Internship ({internship_link}) and was inspired by the scale your team works at.
+
+{slot}
+
+Would love any quick tips on applying or standing out.
+
+Here's my resume: {resume}
+
+Best regards,
+Rajarshi Datta"""
 
 def get_llm():
     api_key = os.getenv("GROQ_API_KEY")
@@ -100,11 +126,7 @@ def generate_message(
             "company": extra.get("company", "")
         }
         slot = safe_invoke(WORK_LINE_PROMPT | llm | parser, payload)
-        template = NO_CONNECTION_200.template
-        msg = template.replace("{name}", name)\
-                      .replace("{context}", context)\
-                      .replace("{resume}", resume)\
-                      .replace("<single short personalized line>", slot)
+        msg = NO_CONNECTION_TEMPLATE.format(name=name, slot=slot, resume=resume)
         msg = enforce_char_limit(msg, 200)
         return msg
 
@@ -113,12 +135,12 @@ def generate_message(
             "context": context
         }
         slot = safe_invoke(CORRELATION_LINE_PROMPT | llm | parser, payload)
-        template = RESEARCH_INTERN_DM.template
-        msg = template.replace("{surname}", surname)\
-                      .replace("{context}", context)\
-                      .replace("{campus}", extra.get("campus", ""))\
-                      .replace("{resume}", resume)\
-                      .replace("<correlation_line>", slot)
+        msg = RESEARCH_TEMPLATE.format(
+            surname=surname,
+            campus=extra.get("campus", ""),
+            slot=slot,
+            resume=resume
+        )
         return msg.strip()
 
     if category == "startup":
@@ -127,12 +149,7 @@ def generate_message(
             "company": extra.get("company", "")
         }
         slot = safe_invoke(WORK_LINE_PROMPT | llm | parser, payload)
-        template = STARTUP_INTERN_DM.template
-        msg = template.replace("{name}", name)\
-                      .replace("{context}", context)\
-                      .replace("{company}", extra.get("company", ""))\
-                      .replace("{resume}", resume)\
-                      .replace("<startup_line>", slot)
+        msg = STARTUP_TEMPLATE.format(name=name, slot=slot, resume=resume)
         return msg.strip()
 
     if category == "bigtech":
@@ -140,14 +157,14 @@ def generate_message(
             "context": context
         }
         slot = safe_invoke(RELEVANCE_LINE_PROMPT | llm | parser, payload)
-        template = BIGTECH_REFERRAL_DM.template
-        msg = template.replace("{name}", name)\
-                      .replace("{company}", extra.get("company", ""))\
-                      .replace("{position}", extra.get("position", ""))\
-                      .replace("{internship_link}", extra.get("internship_link", ""))\
-                      .replace("{context}", context)\
-                      .replace("{resume}", resume)\
-                      .replace("<relevance_line>", slot)
+        msg = BIGTECH_TEMPLATE.format(
+            name=name,
+            company=extra.get("company", ""),
+            position=extra.get("position", ""),
+            internship_link=extra.get("internship_link", ""),
+            slot=slot,
+            resume=resume
+        )
         return msg.strip()
 
     raise ValueError(f"Unknown category: {category}")

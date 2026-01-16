@@ -51,8 +51,11 @@ if st.button("Generate"):
                 extra=extra
             )
 
+
+
             with st.expander(profile.get("name", "Unknown")):
-                st.text_area("Message", msg, height=220)
+                st.text_area("Message", msg, height=220, key=url)
+                st.button("Copy", key="copy_" + url, on_click=st.session_state.update, kwargs={"clipboard": msg})
 
         except Exception as e:
             with st.expander(url):
