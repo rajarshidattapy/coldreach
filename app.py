@@ -5,10 +5,6 @@ from core.linkedin import extract_profile
 
 st.title("ColdReach — LinkedIn Outreach Agent")
 
-# -------------------------
-# INPUTS
-# -------------------------
-
 urls = st.text_area("LinkedIn Profile URLs (one per line)")
 
 category = st.selectbox(
@@ -24,22 +20,17 @@ connected = st.radio(
 
 resume = st.text_input("Resume Drive Link")
 
-# Extra fields (shown conditionally)
 extra = {}
 
 if category == "research":
-    extra["campus"] = st.text_input("Professor's Campus / Institute")
+    extra["campus"] = st.text_input("Campus / Institute")
 
 if category == "bigtech":
     extra["company"] = st.text_input("Company")
     extra["position"] = st.text_input("Internship Position")
-    extra["internship_link"] = st.text_input("Internship Application Link")
+    extra["internship_link"] = st.text_input("Internship Link")
 
-# -------------------------
-# GENERATE
-# -------------------------
-
-if st.button("Generate Messages"):
+if st.button("Generate"):
     llm = get_llm()
     connected_flag = connected == "Already connected"
 
@@ -61,11 +52,7 @@ if st.button("Generate Messages"):
             )
 
             with st.expander(profile.get("name", "Unknown")):
-                st.text_area(
-                    "Generated Message",
-                    msg,
-                    height=180
-                )
+                st.text_area("Message", msg, height=220)
 
         except Exception as e:
             with st.expander(url):
