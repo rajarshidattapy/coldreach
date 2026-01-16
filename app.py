@@ -1,34 +1,72 @@
 import streamlit as st
+
 from core.llm import get_llm, generate_message
 from core.linkedin import extract_profile
 
 st.title("ColdReach — LinkedIn Outreach Agent")
 
-urls = st.text_area("LinkedIn URLs (one per line)")
-template = st.selectbox(
-    "Message Type",
-    ["dm", "connection"]
+# -------------------------
+# INPUTS
+# -------------------------
+
+urls = st.text_area("LinkedIn Profile URLs (one per line)")
+
+category = st.selectbox(
+    "Category",
+    ["startup", "bigtech", "research"]
 )
+
+connected = st.radio(
+    "Connection Status",
+    ["Already connected", "Not connected"],
+    horizontal=True
+)
+
 resume = st.text_input("Resume Drive Link")
 
-if st.button("Generate"):
+# Extra fields (shown conditionally)
+extra = {}
+
+if category == "research":
+    extra["campus"] = st.text_input("Professor's Campus / Institute")
+
+if category == "bigtech":
+    extra["company"] = st.text_input("Company")
+    extra["position"] = st.text_input("Internship Position")
+    extra["internship_link"] = st.text_input("Internship Application Link")
+
+# -------------------------
+# GENERATE
+# -------------------------
+
+if st.button("Generate Messages"):
     llm = get_llm()
-    results = []
+    connected_flag = connected == "Already connected"
+
     for url in urls.splitlines():
         url = url.strip()
         if not url:
             continue
+
         try:
             profile = extract_profile(url)
-            msg = generate_message(llm, profile, template, resume)
-            results.append((profile, msg))
-        except Exception as e:
-            results.append(({"name": url, "error": str(e)}, None))
 
-    for profile, msg in results:
-        name = profile.get("name", "Unknown")
-        with st.expander(name):
-            if msg:
-                st.text_area("Message", msg, height=120, key=name)
-            else:
-                st.error(f"Error: {profile.get('error', 'Unknown error')}")
+            msg = generate_message(
+                llm=llm,
+                profile=profile,
+                category=category,
+                connected=connected_flag,
+                resume=resume,
+                extra=extra
+            )
+
+            with st.expander(profile.get("name", "Unknown")):
+                st.text_area(
+                    "Generated Message",
+                    msg,
+                    height=180
+                )
+
+        except Exception as e:
+            with st.expander(url):
+                st.error(str(e))

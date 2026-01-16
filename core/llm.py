@@ -1,33 +1,93 @@
+from dotenv import load_dotenv
+import os
+
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
-from core.prompt import DM_PROMPT_AI_INTERN, DM_PROMPT_NO_CONN, DM_PROMPT_RESEARCH_INTERN
+
+from core.prompt import (
+    RESEARCH_INTERN_DM,
+    STARTUP_INTERN_DM,
+    BIGTECH_REFERRAL_DM,
+    NO_CONNECTION_200
+)
 from core.utils import enforce_char_limit
-from langchain_core.runnables import RunnableSequence
-from dotenv import load_dotenv
+
 load_dotenv()
 
+# -------------------------
+# LLM SETUP
+# -------------------------
 
 def get_llm():
+    api_key = os.getenv("GROQ_API_KEY")
+
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY not found in environment")
+
     return ChatGroq(
-        model="openai/gpt-oss-120b",
+        model="openai/gpt-oss-120b",   # ✅ Groq-supported
         temperature=0.4,
-        api_key=None  # loaded via env: GROQ_API_KEY
+        groq_api_key=api_key
     )
+
 
 parser = StrOutputParser()
 
-def generate_message(llm, profile, template, resume):
-    prompt = DM_PROMPT_AI_INTERN if template == "dm" else DM_PROMPT_NO_CONN
+# -------------------------
+# MESSAGE GENERATION
+# -------------------------
 
-    chain = prompt | llm | StrOutputParser()
+def generate_message(
+    llm,
+    profile: dict,
+    category: str,
+    connected: bool,
+    resume: str,
+    extra: dict = None
+):
+    """
+    category: 'research' | 'startup' | 'bigtech'
+    connected: True / False
+    extra: additional fields like campus, company, position, internship_link
+    """
 
-    msg = chain.invoke({
-        "name": profile["name"],
-        "context": profile["context"],
-        "resume": resume
-    })
+    extra = extra or {}
 
-    if template == "connection":
+    # -------- Prompt routing --------
+    if not connected:
+        prompt = NO_CONNECTION_200
+
+    elif category == "research":
+        prompt = RESEARCH_INTERN_DM
+
+    elif category == "startup":
+        prompt = STARTUP_INTERN_DM
+
+    elif category == "bigtech":
+        prompt = BIGTECH_REFERRAL_DM
+
+    else:
+        raise ValueError(f"Unknown category: {category}")
+
+    chain = prompt | llm | parser
+
+    # -------- Payload --------
+    payload = {
+        "context": profile.get("context", ""),
+        "resume": resume,
+        **extra
+    }
+
+    # name / surname handling
+    if "surname" in prompt.input_variables:
+        payload["surname"] = profile["name"].split()[-1]
+    if "name" in prompt.input_variables:
+        payload["name"] = profile["name"]
+
+    msg = chain.invoke(payload)
+
+    # -------- Hard limit for no-connection --------
+    if not connected:
         msg = enforce_char_limit(msg, 200)
 
-    return msg
+    return msg.strip()
